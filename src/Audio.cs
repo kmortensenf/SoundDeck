@@ -160,9 +160,11 @@ namespace SoundDeck
     class Voice
     {
         public short[] Data;
+        public int Start, End;    // the part of Data to play (in samples), for trimmed sounds
         public int Pos;
         public object Tag;
         public float Gain = 1f;   // per-sound volume
+        public bool Loop;
     }
 
     /// <summary>A continuously running output stream that mixes playing sounds (and optionally a live microphone).</summary>
@@ -213,10 +215,21 @@ namespace SoundDeck
 
         public void Play(short[] data, object tag, float gain)
         {
+            Play(data, tag, gain, 0, data.Length, false);
+        }
+
+        /// <summary>Plays samples [start, end) of data; with loop, repeats until stopped.</summary>
+        public void Play(short[] data, object tag, float gain, int start, int end, bool loop)
+        {
+            start = Math.Max(0, Math.Min(start, data.Length)) & ~1; // whole stereo frames
+            end = Math.Max(start, Math.Min(end, data.Length)) & ~1;
             Voice v = new Voice();
             v.Data = data;
+            v.Start = v.Pos = start;
+            v.End = end;
             v.Tag = tag;
             v.Gain = gain;
+            v.Loop = loop && end > start;
             lock (voices) voices.Add(v);
         }
 
@@ -238,7 +251,7 @@ namespace SoundDeck
             {
                 foreach (Voice v in voices)
                 {
-                    float p = v.Data.Length == 0 ? 1f : (float)v.Pos / v.Data.Length;
+                    float p = v.End <= v.Start ? 1f : (float)(v.Pos - v.Start) / (v.End - v.Start);
                     float old;
                     if (!r.TryGetValue(v.Tag, out old) || p > old) r[v.Tag] = p;
                 }
@@ -285,13 +298,21 @@ namespace SoundDeck
                 for (int v = voices.Count - 1; v >= 0; v--)
                 {
                     Voice vc = voices[v];
-                    int cnt = Math.Min(n, vc.Data.Length - vc.Pos);
                     short[] d = vc.Data;
-                    int p = vc.Pos;
                     float g = vol * vc.Gain;
-                    for (int k = 0; k < cnt; k++) mix[k] += d[p + k] * g;
-                    vc.Pos += cnt;
-                    if (vc.Pos >= d.Length) voices.RemoveAt(v);
+                    int done = 0;
+                    while (done < n)
+                    {
+                        int cnt = Math.Min(n - done, vc.End - vc.Pos);
+                        int p = vc.Pos;
+                        for (int k = 0; k < cnt; k++) mix[done + k] += d[p + k] * g;
+                        vc.Pos += cnt;
+                        done += cnt;
+                        if (vc.Pos < vc.End) continue;
+                        if (vc.Loop) vc.Pos = vc.Start; // wrap around and keep filling this buffer
+                        else break;
+                    }
+                    if (vc.Pos >= vc.End && !vc.Loop) voices.RemoveAt(v);
                 }
             }
 

@@ -19,15 +19,22 @@
 
 - **Plays into your mic.** People in voice chat hear your voice and your sounds together. SoundDeck mixes your real microphone in.
 - **One-click virtual mic setup.** SoundDeck downloads and installs the free [VB-CABLE](https://vb-cable.com) driver for you, after checking that it's signed by VB-Audio.
+- **Push-to-talk support.** SoundDeck holds your Discord push-to-talk key (or Mouse 4/5) down while a sound plays.
 - **Global hotkeys.** Play any sound with a key, even while a game has focus. There's also a hotkey that stops everything.
+- **Even loudness.** Every sound is measured in LUFS, the measure streaming services use, and matched to the same level, so no clip blows out people's ears. Per-sound volume (0–200%) works on top.
+- **Instant replay.** SoundDeck can keep the last 30 seconds of your PC's audio in memory, so you can press a hotkey and save a funny moment *after* it happened.
+- **Record sounds** from your microphone or from your PC's audio (for example a YouTube clip). Silence is trimmed automatically, and you can fine-tune the trim on the waveform.
+- **Trim, loop and play modes** for any sound, without changing its file. When a playing sound is pressed again, it can stop, start over, or play another copy on top.
 - **Categories and favorites.** Sort sounds into tabs, star your favorites, and switch tabs with Ctrl+1–9. Adding a folder turns it into a category.
 - **Drag to reorder.** Move pads around, or drop one onto a tab to change its category.
-- **Record sounds.** Record from your microphone or from your PC's audio (for example a YouTube clip or a game sound). Silence is trimmed automatically, and you can fine-tune the trim on the waveform.
-- **Per-sound volume** (0–200%), so loud and quiet clips sit at the same level.
+- **Multi-select** (Ctrl/Shift+click) for bulk moving, favoriting and removing. **Ctrl+Z** undoes a removal.
+- **Share boards.** Export your board with all its sounds as a single `.sdboard` file, and import your friends' boards.
+- **Auto-updates.** An **Update** button appears when a new version is out. One click installs it and restarts.
+- **Tray mode and start with Windows**, so your hotkeys are always ready. Headsets plugged in or out are picked up automatically.
 - **Hear it yourself.** Optionally play sounds on your own headphones too, with a separate volume.
 - **Search** across all sounds, and a **compact view** for big boards.
 - **Supported formats:** MP3, WAV, M4A/AAC, WMA and FLAC.
-- **Small and portable.** It's a single ~140 KB `.exe` that needs no installation, and nothing runs in the background when you close it.
+- **Small and portable.** It's a single `.exe` of under 200 KB that needs no installation.
 
 <p align="center">
   <img src="docs/screenshot-compact.png" width="49%" alt="Compact view">
@@ -41,6 +48,7 @@
 2. In the sidebar, click **Install virtual mic**. You only need to do this once. Approve the Windows prompt, click **Install Driver**, and restart your PC if you're asked to.
 3. In Discord, go to **Settings → Voice & Video** and set **Input Device** to **CABLE Output (VB-Audio Virtual Cable)**.
 4. Keep **Mix my microphone in** turned on in SoundDeck, so people still hear you.
+5. If you use push-to-talk in Discord, click **Push-to-talk key** in the sidebar and press the same key.
 
 For the best sound in Discord, also set **Noise Suppression** to *None*, and turn off **Echo Cancellation** and **Automatic Gain Control**. Discord's voice filters treat music and sound effects as noise.
 
@@ -50,7 +58,11 @@ For the best sound in Discord, also set **Noise Suppression** to *None*, and tur
 |---|---|
 | **Add sounds** | Click **Add sounds**, or drag files or folders onto the window |
 | **Play / stop** | Click a pad, then click it again to stop |
-| **Hotkeys, volume, category, rename** | Right-click a pad |
+| **Hotkeys, volume, trim, loop, category, rename** | Right-click a pad |
+| **Select several** | **Ctrl/Shift+click**, or **Ctrl+A**, then right-click or **Delete** |
+| **Undo a removal** | **Ctrl+Z** |
+| **Save the last 30 s** | Turn on instant replay in the sidebar and set its hotkey |
+| **Share a board** | **Export board to share** in the sidebar. Friends use **Add sounds → Import a shared board** |
 | **Reorder** | Drag a pad. To change its category, drop it on a tab |
 | **Favorites** | Click the ☆ on a pad |
 | **Record** | **Record** button or **Ctrl+R** |
@@ -58,6 +70,12 @@ For the best sound in Discord, also set **Noise Suppression** to *None*, and tur
 | **Stop everything** | **Stop all**, **Esc**, or your stop-all hotkey |
 
 Your board and settings are saved in `%APPDATA%\SoundDeck`. Recordings are saved as WAV files in `Documents\SoundDeck Recordings`.
+
+**Privacy:** SoundDeck has no accounts and no telemetry. The only things it contacts on the internet are:
+- GitHub's release API, once at startup, to check for updates.
+- vb-audio.com, only if you click **Install virtual mic**.
+
+Instant replay audio stays in memory and is never written to disk unless you save it.
 
 > **Note:** SoundDeck has to be running for your voice to reach Discord while its input is set to *CABLE Output*. When you're done, switch Discord back to your normal microphone.
 

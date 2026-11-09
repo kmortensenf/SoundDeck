@@ -1,4 +1,4 @@
-SoundDeck 1.2
+SoundDeck 1.3
 =============
 
 A soundboard for Windows 10 and 11. It plays sounds through your microphone into Discord, games and OBS, and you can trigger them with hotkeys.
@@ -25,6 +25,10 @@ GETTING STARTED
      - Echo Cancellation: off
      - Automatic Gain Control: off
 
+5. Do you use push-to-talk in Discord? In the sidebar, click "Push-to-talk key" and press the
+   same key (or mouse button) you use in Discord. SoundDeck then holds it down while a sound
+   plays, so your friends hear it.
+
 
 USING IT
 --------
@@ -33,6 +37,11 @@ USING IT
                   Supported formats: MP3, WAV, M4A, AAC, WMA and FLAC.
   Play / stop     Click a pad to play it. Click it again to stop it.
   Hotkeys         Right-click a pad and choose "Set hotkey". Hotkeys work in games too.
+  Trim / loop     Right-click a pad > "Trim, loop and play mode" to cut the start or end
+                  (the file itself isn't changed), make it loop, or choose what pressing it
+                  again does: stop it, start it over, or play another copy on top.
+  Even loudness   "Even out loudness" in the sidebar (on by default) makes quiet and loud
+                  clips play at about the same level. Per-sound volume still works on top.
   Stop everything Click "Stop all", press Esc, or set a stop-all hotkey in the sidebar.
   Search          Press Ctrl+F, then press Enter to play the first match.
                   Search looks through all categories.
@@ -53,6 +62,10 @@ to listen. Only you hear the preview. Give the sound a name, pick a category, an
 click "Save to board". Recordings are saved as .wav files in Documents\SoundDeck Recordings.
 A recording can be up to 5 minutes long.
 
+Instant replay: turn on "Keep the last 30 s of PC audio" in the sidebar and set a
+save-replay hotkey. When something funny happens, press the hotkey and you get the last
+30 seconds to trim and save. The audio is only kept in memory until you save it.
+
 
 ORGANIZING MANY SOUNDS
 ----------------------
@@ -68,12 +81,31 @@ ORGANIZING MANY SOUNDS
   Switch tabs     Ctrl+1 to Ctrl+9.
   Volume          Right-click a pad > Volume to make one sound louder or quieter (0-200%).
   Compact view    The button to the right of the tabs fits many more sounds on screen.
+  Select several  Ctrl+click or Shift+click pads (Ctrl+A selects all), then right-click for
+                  favorite / category / remove. Delete removes them.
+  Undo            Removed something by accident? Press Ctrl+Z.
+  Moved files     If a sound says "Can't load", right-click it > "Locate the file". Other
+                  missing sounds from the same folder are found automatically.
+  Share a board   "Export board to share" (sidebar) packs your sounds into one .sdboard file.
+                  Your friends use Add sounds > "Import a shared board".
+
+
+APP SETTINGS
+------------
+
+  Start with Windows     Starts SoundDeck when you log in.
+  Keep running in tray   Closing the window keeps SoundDeck running next to the clock, so
+                         hotkeys and your mic keep working. Right-click the icon to quit.
+  Updates                SoundDeck checks GitHub for a new version when it starts. If there
+                         is one, an "Update" button appears at the top: one click installs it
+                         and restarts. Your sounds and settings are kept.
+  Headsets               Plugging audio devices in or out is picked up automatically.
 
 SoundDeck must be running for your voice to reach Discord while Discord's input is set to
 CABLE Output. When you're done, close SoundDeck and switch Discord back to your normal mic.
 
 Your sounds and settings are saved in %APPDATA%\SoundDeck.
-The sound files themselves stay where they are, so don't delete or move them.
+The sound files themselves stay where they are. If you move them, use "Locate the file".
 
 
 CREDITS

@@ -359,13 +359,28 @@ namespace SoundDeck
     {
         public Keys Result = Keys.None;
         readonly string current;
+        readonly bool pushToTalk; // also accepts mouse side/middle buttons
         string live = "";
 
-        public HotkeyDialog(string title, Keys current) : base(title)
+        public HotkeyDialog(string title, Keys current) : this(title, current, false) { }
+
+        public HotkeyDialog(string title, Keys current, bool pushToTalk) : base(title)
         {
-            this.current = current == Keys.None ? "none" : PadGrid.HotkeyText(current);
-            ClientSize = new Size(Theme.S(400), Theme.S(210));
+            this.pushToTalk = pushToTalk;
+            this.current = current == Keys.None ? "none" : PushToTalk.Describe(current);
+            ClientSize = new Size(Theme.S(pushToTalk ? 460 : 400), Theme.S(210));
             SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint, true);
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+            if (!pushToTalk) return;
+            Keys k = e.Button == MouseButtons.XButton1 ? Keys.XButton1 : e.Button == MouseButtons.XButton2 ? Keys.XButton2
+                   : e.Button == MouseButtons.Middle ? Keys.MButton : Keys.None;
+            if (k == Keys.None) return;
+            Result = k;
+            DialogResult = DialogResult.OK;
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -375,15 +390,17 @@ namespace SoundDeck
             int w = ClientSize.Width;
             TextRenderer.DrawText(g, Theme.IcKeyboard, Theme.IconsLarge, new Rectangle(0, Theme.S(18), w, Theme.S(50)), Theme.Accent,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
-            TextRenderer.DrawText(g, "Press a key combination", Theme.Title, new Rectangle(0, Theme.S(74), w, Theme.S(30)), Theme.Text,
-                TextFormatFlags.HorizontalCenter);
+            TextRenderer.DrawText(g, pushToTalk ? "Press your push-to-talk key or mouse button" : "Press a key combination", Theme.Title,
+                new Rectangle(0, Theme.S(74), w, Theme.S(30)), Theme.Text, TextFormatFlags.HorizontalCenter);
             Rectangle box = new Rectangle(Theme.S(90), Theme.S(112), w - Theme.S(180), Theme.S(36));
             Theme.FillRound(g, Theme.Card, box, Theme.S(8));
             Theme.DrawRound(g, Theme.Accent, 1f, box, Theme.S(8));
             TextRenderer.DrawText(g, live.Length > 0 ? live + "…" : "Current: " + current, Theme.Bold, box, live.Length > 0 ? Theme.Text : Theme.Muted,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
-            TextRenderer.DrawText(g, "Tip: F-keys and numpad keys work well   ·   Esc cancel   ·   Backspace clear", Theme.Small,
-                new Rectangle(0, Theme.S(166), w, Theme.S(24)), Theme.Faint, TextFormatFlags.HorizontalCenter);
+            string tip = pushToTalk
+                ? "Use the same key as in Discord   ·   Esc cancel   ·   Backspace turns it off"
+                : "Tip: F-keys and numpad keys work well   ·   Esc cancel   ·   Backspace clear";
+            TextRenderer.DrawText(g, tip, Theme.Small, new Rectangle(0, Theme.S(166), w, Theme.S(24)), Theme.Faint, TextFormatFlags.HorizontalCenter);
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)

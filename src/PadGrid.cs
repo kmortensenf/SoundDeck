@@ -28,6 +28,11 @@ namespace SoundDeck
         readonly Timer autoScroll = new Timer();
 
         public bool Filtered, AllowReorder = true;
+
+        // multi-select: Ctrl+click toggles, Shift+click selects a range, a plain click clears it
+        public readonly HashSet<SoundEntry> Selected = new HashSet<SoundEntry>();
+        SoundEntry anchor;
+        public event Action SelectionChanged;
         public string EmptyTitle = "Your soundboard is empty";
         public string EmptySub = "Drag audio files or folders here, or click to add sounds.";
         public Func<SoundEntry, Color> ColorOf;
@@ -65,8 +70,43 @@ namespace SoundDeck
         {
             items = list;
             hover = -1;
+            int before = Selected.Count;
+            Selected.RemoveWhere(s => !items.Contains(s)); // selection only covers what's on screen
             Relayout();
             Invalidate();
+            if (Selected.Count != before && SelectionChanged != null) SelectionChanged();
+        }
+
+        public void ClearSelection()
+        {
+            if (Selected.Count == 0) return;
+            Selected.Clear();
+            Invalidate();
+            if (SelectionChanged != null) SelectionChanged();
+        }
+
+        public void SelectAll()
+        {
+            foreach (SoundEntry s in items) Selected.Add(s);
+            Invalidate();
+            if (SelectionChanged != null) SelectionChanged();
+        }
+
+        void ClickSelect(int i, Keys mods)
+        {
+            SoundEntry s = items[i];
+            if ((mods & Keys.Shift) != 0 && anchor != null && items.Contains(anchor))
+            {
+                int a = items.IndexOf(anchor);
+                for (int k = Math.Min(a, i); k <= Math.Max(a, i); k++) Selected.Add(items[k]);
+            }
+            else
+            {
+                if (!Selected.Remove(s)) Selected.Add(s);
+                anchor = s;
+            }
+            Invalidate();
+            if (SelectionChanged != null) SelectionChanged();
         }
 
         public void SetProgress(Dictionary<object, float> p)
@@ -239,8 +279,15 @@ namespace SoundDeck
             int i = pressIndex;
             pressIndex = -1;
             if (i < 0 || i >= items.Count || HitTest(e.Location) != i) return;
+            Keys mods = ModifierKeys;
             if (StarRect(TileRect(i)).Contains(e.Location)) { if (StarClicked != null) StarClicked(items[i]); }
-            else if (PadClicked != null) PadClicked(items[i]);
+            else if ((mods & (Keys.Control | Keys.Shift)) != 0) ClickSelect(i, mods);
+            else
+            {
+                anchor = items[i];
+                ClearSelection();
+                if (PadClicked != null) PadClicked(items[i]);
+            }
         }
 
         protected override void OnMouseCaptureChanged(EventArgs e)
@@ -371,7 +418,9 @@ namespace SoundDeck
                         g.FillRectangle(b, rf.X, rf.Y, rf.Width * prog, rf.Height);
                     g.Clip = old;
                 }
-                using (Pen p = new Pen(playing ? Theme.Accent : hot ? Theme.Faint : Theme.Border, playing ? Theme.S(2) : 1f)) g.DrawPath(p, path);
+                bool sel = Selected.Contains(s);
+                Color edge = sel ? Theme.AccentHover : playing ? Theme.Accent : hot ? Theme.Faint : Theme.Border;
+                using (Pen p = new Pen(edge, playing || sel ? Theme.S(2) : 1f)) g.DrawPath(p, path);
             }
 
             // icon tile in the sound's color: music note normally, play on hover, stop while playing
@@ -382,6 +431,15 @@ namespace SoundDeck
             string glyph = playing ? Theme.IcStop : hot ? Theme.IcPlay : Theme.IcMusic;
             TextRenderer.DrawText(g, glyph, Theme.Icons, icon, playing ? Color.White : Theme.Mix(tint, Color.White, 0.35f),
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+            if (Selected.Contains(s))
+            {
+                // check badge on the icon's corner
+                int d = Theme.S(16);
+                Rectangle badge = new Rectangle(icon.Right - d + Theme.S(4), icon.Y - Theme.S(4), d, d);
+                using (SolidBrush b = new SolidBrush(Theme.AccentHover)) g.FillEllipse(b, badge);
+                TextRenderer.DrawText(g, Theme.IcCheck, new Font(Theme.Icons.FontFamily, 6.5f), badge, Color.White,
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+            }
 
             // favorite star: always shown when set, outline on hover
             Rectangle star = StarRect(r);
@@ -421,8 +479,9 @@ namespace SoundDeck
                 TextRenderer.DrawText(g, hk, Theme.Small, new Rectangle(chip.X + Theme.S(22), chip.Y, ts.Width + 2, chip.Height), Theme.Text,
                     TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
             }
-            string right = s.Error != null ? "Can't load" : s.Seconds < 0 ? "" : FormatLength(s.Seconds);
+            string right = s.Error != null ? "Can't load" : s.Seconds < 0 ? "" : FormatLength(s.PlayedSeconds);
             if (s.Volume != 100 && s.Error == null) right = s.Volume + "%   " + right;
+            if (s.Loop && s.Error == null) right = "loop   " + right;
             TextRenderer.DrawText(g, right, Theme.Small, new Rectangle(r.X, by, r.Width - Theme.S(12), Theme.S(20)),
                 s.Error != null ? Theme.Danger : Theme.Muted, TextFormatFlags.Right | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
         }
@@ -432,8 +491,9 @@ namespace SoundDeck
             if (s.Error != null) return "Can't load";
             List<string> parts = new List<string>();
             if (s.Hotkey != Keys.None) parts.Add(HotkeyText(s.Hotkey));
-            if (s.Seconds >= 0) parts.Add(FormatLength(s.Seconds));
+            if (s.Seconds >= 0) parts.Add(FormatLength(s.PlayedSeconds));
             if (s.Volume != 100) parts.Add(s.Volume + "%");
+            if (s.Loop) parts.Add("loop");
             return string.Join("  ·  ", parts);
         }
 

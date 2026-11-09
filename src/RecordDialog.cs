@@ -252,7 +252,7 @@ namespace SoundDeck
         readonly object previewTag = new object();
 
         readonly FlatButton btnMic, btnPc, btnPreview, btnAutoTrim, btnAgain, btnSave, btnCancel;
-        readonly Label lblSource, lblTime, lblHint, lblSel;
+        readonly Label src, lblSource, lblTime, lblHint, lblSel;
         readonly RecordButton btnRec;
         readonly WaveformView wave;
         readonly DarkInput nameInput;
@@ -265,6 +265,29 @@ namespace SoundDeck
         public short[] ResultSamples;
         public string ResultName, ResultCategory;
 
+        /// <summary>Opens straight in review mode with audio captured elsewhere (instant replay).</summary>
+        public RecordDialog(short[] preloaded, List<string> categories, string defaultCategory)
+            : this(-1, "", categories, defaultCategory)
+        {
+            Text = "Save instant replay";
+            fromComputer = true;
+            nameInput.Box.Text = "Replay " + DateTime.Now.ToString("yyyy-MM-dd HH.mm");
+            samples = preloaded;
+            state = State.Review;
+            wave.ShowSound(samples);
+            AutoTrim();
+            // a replay is long: start with just the last 8 seconds selected, the user widens it if needed
+            int frames = samples.Length / 2;
+            if (frames > WinMM.SampleRate * 8) wave.SetTrim(Math.Max(wave.TrimStart, frames - WinMM.SampleRate * 8), wave.TrimEnd);
+            UpdateState();
+            btnAgain.Visible = false;
+            btnRec.Visible = btnMic.Visible = btnPc.Visible = src.Visible = false;
+            lblSource.Text = "The last " + ReplayBuffer.Seconds + " seconds of your PC's audio. Drag the handles to keep the part you want.";
+            lblSource.Left = btnMic.Left;
+            lblSource.Width = wave.Width;
+            UpdateSelectionLabel();
+        }
+
         public RecordDialog(int micDeviceId, string micDeviceName, List<string> categories, string defaultCategory) : base("Record a sound")
         {
             micDevice = micDeviceId;
@@ -274,7 +297,7 @@ namespace SoundDeck
             int x = Theme.S(22), w = ClientSize.Width - Theme.S(44);
 
             // --- source
-            Label src = SmallLabel("RECORD FROM", Theme.Faint);
+            src = SmallLabel("RECORD FROM", Theme.Faint);
             src.Font = Theme.SectionFont;
             src.SetBounds(x, Theme.S(16), w, Theme.S(18));
             btnMic = new FlatButton("Microphone", Theme.IcMic, ButtonStyle.Primary);

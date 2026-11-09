@@ -6,8 +6,73 @@ using System.Threading;
 
 namespace SoundDeck
 {
+    /// <summary>Somewhere captured audio goes (interleaved floats in the source's own format).</summary>
+    interface IAudioSink
+    {
+        void SetFormat(int channels, int sampleRate);
+        void Append(float[] src, int n);
+    }
+
+    /// <summary>
+    /// Instant replay: always keeps the last <see cref="Seconds"/> seconds of the PC's audio in memory,
+    /// so a funny moment can be saved after it happened. Nothing is written to disk until the user saves.
+    /// </summary>
+    class ReplayBuffer : IAudioSink, IDisposable
+    {
+        public const int Seconds = 30;
+
+        readonly object sync = new object();
+        float[] ring = new float[WinMM.SampleRate * 2 * Seconds];
+        int write, filled, channels = 2, rate = WinMM.SampleRate;
+        readonly LoopbackCapture capture;
+
+        public ReplayBuffer() { capture = new LoopbackCapture(this); }
+
+        public void SetFormat(int ch, int sampleRate)
+        {
+            lock (sync)
+            {
+                channels = ch;
+                rate = sampleRate;
+                ring = new float[ch * sampleRate * Seconds];
+                write = filled = 0;
+            }
+        }
+
+        public void Append(float[] src, int n)
+        {
+            lock (sync)
+            {
+                for (int i = 0; i < n; i++)
+                {
+                    ring[write] = src[i];
+                    write = (write + 1) % ring.Length;
+                }
+                filled = Math.Min(ring.Length, filled + n);
+            }
+        }
+
+        /// <summary>The buffered audio, oldest first, as 48 kHz stereo.</summary>
+        public short[] Snapshot()
+        {
+            float[] linear;
+            int ch, r;
+            lock (sync)
+            {
+                linear = new float[filled];
+                int start = (write - filled + ring.Length) % ring.Length;
+                for (int i = 0; i < filled; i++) linear[i] = ring[(start + i) % ring.Length];
+                ch = channels;
+                r = rate;
+            }
+            return AudioDecoder.ToStereo48k(linear, linear.Length, ch, r);
+        }
+
+        public void Dispose() { capture.Dispose(); }
+    }
+
     /// <summary>Growing buffer of captured audio (interleaved floats in the source's own format) plus peaks for drawing.</summary>
-    class Recording
+    class Recording : IAudioSink
     {
         public const int MaxSeconds = 300;
 
@@ -145,13 +210,13 @@ namespace SoundDeck
         const int AUDCLNT_BUFFERFLAGS_SILENT = 0x2;
         static readonly Guid FloatSubtype = new Guid("00000003-0000-0010-8000-00AA00389B71");
 
-        readonly Recording target;
+        readonly IAudioSink target;
         readonly Thread thread;
         readonly ManualResetEvent ready = new ManualResetEvent(false);
         volatile bool running = true;
         Exception startError;
 
-        public LoopbackCapture(Recording target)
+        public LoopbackCapture(IAudioSink target)
         {
             this.target = target;
             thread = new Thread(Run);
