@@ -132,11 +132,11 @@ namespace SoundDeck
 
         protected override void OnMouseDown(MouseEventArgs e) { base.OnMouseDown(e); if (e.Button == MouseButtons.Left && Enabled) SetFromMouse(e.X); }
         protected override void OnMouseMove(MouseEventArgs e) { base.OnMouseMove(e); if (down && Enabled) SetFromMouse(e.X); }
-        protected override void OnMouseWheel(MouseEventArgs e)
+        // The wheel never moves a slider: it scrolls whatever the slider sits in (drag or click to change it).
+        protected override void WndProc(ref Message m)
         {
-            if (Enabled) Value += e.Delta > 0 ? 5 : -5;
-            HandledMouseEventArgs h = e as HandledMouseEventArgs;
-            if (h != null) h.Handled = true;
+            if (m.Msg == WheelForward.WM_MOUSEWHEEL && WheelForward.ToParent(this, ref m)) return;
+            base.WndProc(ref m);
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -283,6 +283,21 @@ namespace SoundDeck
         }
     }
 
+    /// <summary>Passes mouse-wheel messages up to the parent, so a control under the cursor doesn't swallow scrolling.</summary>
+    static class WheelForward
+    {
+        public const int WM_MOUSEWHEEL = 0x020A;
+        [DllImport("user32.dll")] static extern IntPtr SendMessage(IntPtr h, int msg, IntPtr w, IntPtr l);
+
+        public static bool ToParent(Control c, ref Message m)
+        {
+            if (c.Parent == null || !c.Parent.IsHandleCreated) return false;
+            SendMessage(c.Parent.Handle, m.Msg, m.WParam, m.LParam);
+            m.Result = IntPtr.Zero;
+            return true;
+        }
+    }
+
     class DarkCombo : ComboBox
     {
         public DarkCombo()
@@ -311,6 +326,9 @@ namespace SoundDeck
 
         protected override void WndProc(ref Message m)
         {
+            // The wheel only changes the choice while the list is open; otherwise it scrolls the page,
+            // so scrolling past a dropdown can't switch your microphone by accident.
+            if (m.Msg == WheelForward.WM_MOUSEWHEEL && !DroppedDown && WheelForward.ToParent(this, ref m)) return;
             base.WndProc(ref m);
             if (m.Msg != 0xF) return; // WM_PAINT: repaint the frame and arrow in the dark style
             using (Graphics g = Graphics.FromHwnd(Handle))

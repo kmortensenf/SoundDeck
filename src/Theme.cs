@@ -49,7 +49,7 @@ namespace SoundDeck
         // more glyphs (written as escapes)
         public static readonly string IcStar = Glyph(0xE734), IcStarFilled = Glyph(0xE735), IcTag = Glyph(0xE8EC),
             IcGrid = Glyph(0xF0E2), IcList = Glyph(0xE8FD), IcAll = Glyph(0xE8A9), IcEdit = Glyph(0xE70F),
-            IcDelete = Glyph(0xE74D), IcChevronRight = Glyph(0xE76C), IcRecord = Glyph(0xE7C8);
+            IcDelete = Glyph(0xE74D), IcChevronRight = Glyph(0xE76C), IcRecord = Glyph(0xE7C8), IcSettings = Glyph(0xE713);
 
         static string Glyph(int code) { return ((char)code).ToString(); }
 

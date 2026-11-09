@@ -1,4 +1,4 @@
-SoundDeck 1.5
+SoundDeck 1.6
 =============
 
 A soundboard for Windows 10 and 11. It plays sounds through your microphone into Discord, games and OBS, and you can trigger them with hotkeys.
@@ -14,15 +14,15 @@ GETTING STARTED
    That warning appears because the app isn't code-signed. It's normal for small, free apps.
 
    The first time you open it, a short setup guide walks you through everything below and
-   tests that your sounds really reach Discord. You can open it again from the sidebar
-   (App > Setup guide). The steps it covers:
+   tests that your sounds really reach Discord. You can open it again from
+   Settings (the gear at the top) > App > Open the setup guide. The steps it covers:
 
 2. In the sidebar on the right, click "Install virtual mic". You only need to do this once.
    SoundDeck downloads VB-CABLE, a free virtual audio cable, from its official website.
    Approve the Windows prompt and click "Install Driver". Restart your PC if it asks you to.
 
 3. In Discord, go to Settings > Voice & Video and set Input Device to "CABLE Output".
-   Keep "Mix my microphone in" turned on in SoundDeck, so people still hear your voice.
+   Keep "Mix my voice in" turned on in SoundDeck, so people still hear your voice.
 
 4. Also in Voice & Video, turn these OFF:
      - Noise Suppression: None   (Krisp removes sound effects and music along with noise)
@@ -32,8 +32,8 @@ GETTING STARTED
    cleans up your own microphone before the sounds are mixed in, so only your voice is
    filtered, never the sounds.
 
-5. Do you use push-to-talk in Discord? In the sidebar, click "Push-to-talk key" and press the
-   same key (or mouse button) you use in Discord. SoundDeck then holds it down while a sound
+5. Do you use push-to-talk in Discord? Open Settings > Hotkeys, click "Push-to-talk key" and
+   press the same key (or mouse button) you use in Discord. SoundDeck then holds it down while a sound
    plays, so your friends hear it.
 
 
@@ -49,7 +49,10 @@ USING IT
                   again does: stop it, start it over, or play another copy on top.
   Even loudness   "Even out loudness" in the sidebar (on by default) makes quiet and loud
                   clips play at about the same level. Per-sound volume still works on top.
-  Stop everything Click "Stop all", press Esc, or set a stop-all hotkey in the sidebar.
+  Stop everything Click "Stop all", press Esc, or set a stop-all hotkey in Settings > Hotkeys.
+  Sidebar         The sidebar is your mixer: voice and sound volumes, noise removal and more.
+                  Devices, hotkeys, instant replay and app options are in Settings (the gear).
+                  The mouse wheel only scrolls; it never changes a dropdown or slider.
   Search          Press Ctrl+F, then press Enter to play the first match.
                   Search looks through all categories.
 
@@ -59,7 +62,7 @@ RECORDING SOUNDS
 
 Click "Record" at the top, or press Ctrl+R. You can record from:
 
-  Microphone      Uses the microphone that's selected in the sidebar.
+  Microphone      Uses the microphone chosen in Settings > Audio devices.
   Computer audio  Records everything playing on your PC, such as a YouTube clip or a
                   game sound. Start recording, play the clip, then stop.
 
@@ -69,8 +72,8 @@ to listen. Only you hear the preview. Give the sound a name, pick a category, an
 click "Save to board". Recordings are saved as .wav files in Documents\SoundDeck Recordings.
 A recording can be up to 5 minutes long.
 
-Instant replay: turn on "Keep the last 30 s of PC audio" in the sidebar and set a
-save-replay hotkey. When something funny happens, press the hotkey and you get the last
+Instant replay: in Settings > Instant replay, turn on "Keep the last 30 seconds of PC audio"
+and set a save-replay hotkey. When something funny happens, press the hotkey and you get the last
 30 seconds to trim and save. The audio is only kept in memory until you save it.
 
 
@@ -93,12 +96,12 @@ ORGANIZING MANY SOUNDS
   Undo            Removed something by accident? Press Ctrl+Z.
   Moved files     If a sound says "Can't load", right-click it > "Locate the file". Other
                   missing sounds from the same folder are found automatically.
-  Share a board   "Export board to share" (sidebar) packs your sounds into one .sdboard file.
+  Share a board   Settings > App > "Export board to share" packs your sounds into one .sdboard file.
                   Your friends use Add sounds > "Import a shared board".
 
 
-APP SETTINGS
-------------
+APP SETTINGS (Settings > App)
+------------------------------
 
   Start with Windows     Starts SoundDeck when you log in.
   Keep running in tray   Closing the window keeps SoundDeck running next to the clock, so

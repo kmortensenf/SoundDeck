@@ -47,11 +47,11 @@
 1. [Download the latest release](../../releases/latest), unzip it somewhere permanent (for example Documents), and run `SoundDeck.exe`.
    > Windows may say *"Windows protected your PC"* because the app isn't code-signed. If it does, click **More info → Run anyway**.
 
-   On first launch, a **setup guide** walks you through the steps below. It finishes with an automatic test: SoundDeck plays a chime into the virtual mic and listens on the other end, so you know Discord will hear your sounds. You can reopen the guide from the sidebar (**App → Setup guide**).
+   On first launch, a **setup guide** walks you through the steps below. It finishes with an automatic test: SoundDeck plays a chime into the virtual mic and listens on the other end, so you know Discord will hear your sounds. You can reopen the guide from **Settings (⚙) → App → Open the setup guide**.
 2. In the sidebar, click **Install virtual mic**. You only need to do this once. Approve the Windows prompt, click **Install Driver**, and restart your PC if you're asked to.
 3. In Discord, go to **Settings → Voice & Video** and set **Input Device** to **CABLE Output (VB-Audio Virtual Cable)**.
 4. Keep **Mix my microphone in** turned on in SoundDeck, so people still hear you.
-5. If you use push-to-talk in Discord, click **Push-to-talk key** in the sidebar and press the same key.
+5. If you use push-to-talk in Discord, open **Settings (⚙) → Hotkeys → Push-to-talk key** and press the same key.
 
 In Discord, also set **Noise Suppression** to *None*, and turn off **Echo Cancellation** and **Automatic Gain Control**. Discord's voice filters, Krisp especially, treat music and sound effects as noise and strip them out. You don't lose noise removal by doing this: SoundDeck's **Remove background noise** (on by default) cleans up your own microphone *before* the sounds are mixed in, so your voice gets filtered and your sounds don't.
 
@@ -64,8 +64,9 @@ In Discord, also set **Noise Suppression** to *None*, and turn off **Echo Cancel
 | **Hotkeys, volume, trim, loop, category, rename** | Right-click a pad |
 | **Select several** | **Ctrl/Shift+click**, or **Ctrl+A**, then right-click or **Delete** |
 | **Undo a removal** | **Ctrl+Z** |
-| **Save the last 30 s** | Turn on instant replay in the sidebar and set its hotkey |
-| **Share a board** | **Export board to share** in the sidebar. Friends use **Add sounds → Import a shared board** |
+| **Save the last 30 s** | **Settings → Instant replay**: turn it on and set its hotkey |
+| **Share a board** | **Settings → App → Export board to share**. Friends use **Add sounds → Import a shared board** |
+| **Volumes, voice, noise removal** | The sidebar on the right. Devices, hotkeys and app options are in **Settings (⚙)** |
 | **Reorder** | Drag a pad. To change its category, drop it on a tab |
 | **Favorites** | Click the ☆ on a pad |
 | **Record** | **Record** button or **Ctrl+R** |

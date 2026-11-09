@@ -85,6 +85,7 @@ namespace SoundDeck
         Dictionary<object, float> playing = new Dictionary<object, float>();
 
         Panel header, sidebar, statusBar;
+        SettingsDialog settingsDlg;
         PadGrid grid;
         CategoryBar catBar;
         readonly List<string> categories = new List<string>();
@@ -92,7 +93,7 @@ namespace SoundDeck
         ContextMenuStrip chipMenu;
         string chipTarget;
         SearchBox search;
-        FlatButton btnAdd, btnRecord, btnStopAll, btnInstall, btnStopKey, btnRefresh, btnUpdate;
+        FlatButton btnAdd, btnRecord, btnStopAll, btnGear, btnInstall, btnStopKey, btnRefresh, btnUpdate;
         FlatButton btnPtt, btnReplayKey, btnReplayNow, btnExport, btnCheckUpdates;
         StatusCard cableCard;
         DarkCombo cbVirtual, cbMic, cbMonitor;
@@ -248,6 +249,11 @@ namespace SoundDeck
             header.Controls.Add(btnRecord);
             header.Controls.Add(btnAdd);
             header.Controls.Add(btnStopAll);
+            btnGear = new FlatButton("", Theme.IcSettings, ButtonStyle.Ghost);
+            btnGear.Size = new Size(Theme.S(36), Theme.S(34));
+            btnGear.Click += (s, e) => ShowSettings(-1);
+            new ToolTip().SetToolTip(btnGear, "Settings: devices, hotkeys, push-to-talk, instant replay, app");
+            header.Controls.Add(btnGear);
             header.Resize += (s, e) => LayoutHeader();
         }
 
@@ -256,6 +262,7 @@ namespace SoundDeck
             int cy = (header.Height - btnAdd.Height) / 2;
             int x = header.Width - sideWidth - Theme.S(18);
             btnStopAll.Location = new Point(header.Width - Theme.S(18) - btnStopAll.Width, cy);
+            btnGear.Location = new Point(btnStopAll.Left - Theme.S(8) - btnGear.Width, cy);
             btnAdd.Location = new Point(x - btnAdd.Width, cy);
             btnRecord.Location = new Point(btnAdd.Left - Theme.S(8) - btnRecord.Width, cy);
             int left = btnRecord.Left;
@@ -291,47 +298,29 @@ namespace SoundDeck
             sidebar.MouseWheel += SidebarWheel;
             sidebar.MouseEnter += (s, e) => sidebar.Focus();
 
-            // --- virtual mic
+            // The sidebar is the "mixer": only what you touch while playing. Everything you set once lives in
+            // the Settings window, so the sidebar fits without scrolling.
+
+            // --- virtual mic status
             AddSide(Section("VIRTUAL MICROPHONE"), Theme.S(4));
             cableCard = new StatusCard();
+            cableCard.Cursor = Cursors.Hand;
+            cableCard.Click += (s, e) => ShowSettings(0);
             AddSide(cableCard, Theme.S(8));
             btnInstall = new FlatButton("Install virtual mic", Theme.IcDownload, ButtonStyle.Primary);
             btnInstall.Click += (s, e) => InstallCable();
             AddSide(btnInstall, Theme.S(10));
-            credit = new LinkLabel();
-            credit.Text = "Virtual mic powered by VB-CABLE, donationware by VB-Audio · vb-cable.com";
-            credit.LinkArea = new LinkArea(credit.Text.IndexOf("vb-cable.com"), "vb-cable.com".Length);
-            credit.Font = Theme.Small;
-            credit.ForeColor = Theme.Faint;
-            credit.LinkColor = Theme.Muted;
-            credit.ActiveLinkColor = Theme.Accent;
-            credit.Height = Theme.S(32);
-            credit.LinkClicked += (s, e) => { try { Process.Start(CableInstaller.HomeUrl); } catch { } };
+            credit = CreditLink();
             AddSide(credit, Theme.S(6));
-            Label sendTo = Field("Send sounds to");
-            btnRefresh = new FlatButton("", Theme.IcRefresh, ButtonStyle.Ghost);
-            btnRefresh.Size = new Size(Theme.S(26), Theme.S(22));
-            btnRefresh.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnRefresh.Click += (s, e) => { LoadDevices(); OpenAudio(); Flash("Audio devices refreshed.", 3, Theme.Good); };
-            new ToolTip().SetToolTip(btnRefresh, "Refresh audio devices");
-            sendTo.Height = Theme.S(24);
-            sendTo.TextAlign = ContentAlignment.MiddleLeft;
-            sendTo.Controls.Add(btnRefresh);
-            sendTo.Resize += (s, e) => btnRefresh.Location = new Point(sendTo.Width - btnRefresh.Width, 1);
-            AddSide(sendTo, Theme.S(4));
-            cbVirtual = new DarkCombo();
-            AddSide(cbVirtual, Theme.S(4));
 
             // --- voice
             AddSide(Section("YOUR VOICE"), Theme.S(20));
-            tgMic = new Toggle("Mix my microphone in");
+            tgMic = new Toggle("Mix my voice in");
             AddSide(tgMic, Theme.S(4));
-            cbMic = new DarkCombo();
-            AddSide(cbMic, Theme.S(4));
             tgDenoise = new Toggle("Remove background noise");
-            AddSide(tgDenoise, Theme.S(4));
+            AddSide(tgDenoise, Theme.S(2));
             slMic = new FlatSlider("Voice volume", Theme.IcMic);
-            AddSide(slMic, Theme.S(6));
+            AddSide(slMic, Theme.S(4));
 
             // --- sounds
             AddSide(Section("SOUNDS"), Theme.S(18));
@@ -340,52 +329,86 @@ namespace SoundDeck
             tgNormalize = new Toggle("Even out loudness");
             AddSide(tgNormalize, Theme.S(6));
             tgMonitor = new Toggle("Let me hear sounds too");
-            AddSide(tgMonitor, Theme.S(8));
-            cbMonitor = new DarkCombo();
-            AddSide(cbMonitor, Theme.S(4));
+            AddSide(tgMonitor, Theme.S(2));
             slMonitor = new FlatSlider("My volume", Theme.IcHeadphones);
-            AddSide(slMonitor, Theme.S(6));
+            AddSide(slMonitor, Theme.S(4));
 
-            // --- playback
-            AddSide(Section("PLAYBACK"), Theme.S(18));
-            tgStopPrev = new Toggle("Stop previous sound on play");
-            AddSide(tgStopPrev, Theme.S(4));
-            btnStopKey = new FlatButton("", Theme.IcKeyboard, ButtonStyle.Normal);
-            btnStopKey.Click += (s, e) => SetStopHotkey();
-            AddSide(btnStopKey, Theme.S(8));
-            btnPtt = new FlatButton("", Theme.IcMic, ButtonStyle.Normal);
-            btnPtt.Click += (s, e) => SetPttKey();
-            AddSide(btnPtt, Theme.S(8));
-
-            // --- instant replay
-            AddSide(Section("INSTANT REPLAY"), Theme.S(22));
-            tgReplay = new Toggle("Keep the last 30 s of PC audio");
-            AddSide(tgReplay, Theme.S(4));
-            btnReplayKey = new FlatButton("", Theme.IcKeyboard, ButtonStyle.Normal);
-            btnReplayKey.Click += (s, e) => SetReplayHotkey();
-            AddSide(btnReplayKey, Theme.S(6));
-            btnReplayNow = new FlatButton("Save replay now", Theme.IcRecord, ButtonStyle.Ghost);
-            btnReplayNow.Click += (s, e) => SaveReplay();
-            AddSide(btnReplayNow, Theme.S(4));
-
-            // --- app
-            AddSide(Section("APP"), Theme.S(18));
-            tgStartup = new Toggle("Start with Windows");
-            AddSide(tgStartup, Theme.S(4));
-            tgTray = new Toggle("Keep running in the tray when closed");
-            AddSide(tgTray, Theme.S(4));
-            btnExport = new FlatButton("Export board to share…", Theme.IcFolder, ButtonStyle.Normal);
-            btnExport.Click += (s, e) => ExportBoard();
-            AddSide(btnExport, Theme.S(8));
-            FlatButton btnSetup = new FlatButton("Setup guide", Theme.IcCheck, ButtonStyle.Normal);
-            btnSetup.Click += (s, e) => ShowSetup();
-            AddSide(btnSetup, Theme.S(8));
-            btnCheckUpdates = new FlatButton("Version " + Updater.Short(Updater.Current) + "  ·  Check for updates", Theme.IcRefresh, ButtonStyle.Ghost);
-            btnCheckUpdates.Click += (s, e) => CheckForUpdates(true);
-            AddSide(btnCheckUpdates, Theme.S(6));
+            FlatButton btnSettings = new FlatButton("Settings", Theme.IcSettings, ButtonStyle.Normal);
+            btnSettings.Click += (s, e) => ShowSettings(-1);
+            AddSide(btnSettings, Theme.S(22));
             Panel spacer = new Panel();
             spacer.Height = Theme.S(14);
             AddSide(spacer, 0);
+
+            // ---------------- Settings window
+            settingsDlg = new SettingsDialog();
+            SettingsDialog sd = settingsDlg;
+
+            int audio = sd.AddPage("Audio devices", Theme.IcHeadphones, "Audio devices");
+            sd.Heading(audio, "SEND SOUNDS TO (VIRTUAL MIC)", 0);
+            cbVirtual = new DarkCombo();
+            sd.Add(audio, cbVirtual, Theme.S(6), true);
+            sd.Note(audio, "Pick \"CABLE Input\". In Discord, choose \"CABLE Output\" as your microphone.", 1);
+            sd.Heading(audio, "YOUR MICROPHONE", Theme.S(18));
+            cbMic = new DarkCombo();
+            sd.Add(audio, cbMic, Theme.S(6), true);
+            sd.Heading(audio, "WHERE YOU HEAR SOUNDS", Theme.S(18));
+            cbMonitor = new DarkCombo();
+            sd.Add(audio, cbMonitor, Theme.S(6), true);
+            sd.Note(audio, "Used when \"Let me hear sounds too\" is on.", 1);
+            btnRefresh = new FlatButton("Refresh device list", Theme.IcRefresh, ButtonStyle.Normal);
+            btnRefresh.Click += (s, e) => { LoadDevices(); OpenAudio(); Flash("Audio devices refreshed.", 3, Theme.Good); };
+            sd.Add(audio, btnRefresh, Theme.S(18), false);
+            sd.Add(audio, CreditLink(), Theme.S(18), true);
+
+            int keys = sd.AddPage("Hotkeys", Theme.IcKeyboard, "Hotkeys & push-to-talk");
+            sd.Heading(keys, "STOP EVERYTHING", 0);
+            btnStopKey = new FlatButton("", Theme.IcKeyboard, ButtonStyle.Normal);
+            btnStopKey.Click += (s, e) => SetStopHotkey();
+            sd.Add(keys, btnStopKey, Theme.S(6), false);
+            sd.Note(keys, "Hotkeys for single sounds: right-click a sound and choose \"Set hotkey\".", 1);
+            sd.Heading(keys, "PUSH-TO-TALK", Theme.S(18));
+            btnPtt = new FlatButton("", Theme.IcMic, ButtonStyle.Normal);
+            btnPtt.Click += (s, e) => SetPttKey();
+            sd.Add(keys, btnPtt, Theme.S(6), false);
+            sd.Note(keys, "If you use push-to-talk in Discord, set the same key or mouse button here. SoundDeck holds it down " +
+                          "while a sound plays. Avoid letter keys: they also type into text fields.", 2);
+            sd.Heading(keys, "PLAYBACK", Theme.S(18));
+            tgStopPrev = new Toggle("Stop the previous sound when a new one starts");
+            sd.Add(keys, tgStopPrev, Theme.S(4), true);
+
+            int rep = sd.AddPage("Instant replay", Theme.IcRecord, "Instant replay");
+            tgReplay = new Toggle("Keep the last 30 seconds of PC audio");
+            sd.Add(rep, tgReplay, 0, true);
+            sd.Note(rep, "Kept in memory only, never written to disk unless you save it. Press the hotkey after something funny " +
+                         "happens, then trim the clip and add it to your board.", 2);
+            btnReplayKey = new FlatButton("", Theme.IcKeyboard, ButtonStyle.Normal);
+            btnReplayKey.Click += (s, e) => SetReplayHotkey();
+            sd.Add(rep, btnReplayKey, Theme.S(14), false);
+            btnReplayNow = new FlatButton("Save replay now", Theme.IcRecord, ButtonStyle.Normal);
+            btnReplayNow.Click += (s, e) => { settingsDlg.Close(); SaveReplay(); };
+            sd.Add(rep, btnReplayNow, Theme.S(8), false);
+
+            int app = sd.AddPage("App", Theme.IcSettings, "App");
+            tgStartup = new Toggle("Start with Windows");
+            sd.Add(app, tgStartup, 0, true);
+            tgTray = new Toggle("Keep running in the tray when closed");
+            sd.Add(app, tgTray, Theme.S(4), true);
+            sd.Note(app, "So hotkeys and your mic keep working with the window closed. Right-click the tray icon to quit.", 2);
+            sd.Heading(app, "SHARING", Theme.S(18));
+            btnExport = new FlatButton("Export board to share…", Theme.IcFolder, ButtonStyle.Normal);
+            btnExport.Click += (s, e) => ExportBoard();
+            sd.Add(app, btnExport, Theme.S(6), false);
+            FlatButton btnImport = new FlatButton("Import a shared board…", Theme.IcDownload, ButtonStyle.Normal);
+            btnImport.Click += (s, e) => { settingsDlg.Close(); ImportBoard(); };
+            sd.Add(app, btnImport, Theme.S(8), false);
+            sd.Heading(app, "HELP & UPDATES", Theme.S(18));
+            FlatButton btnSetup = new FlatButton("Open the setup guide", Theme.IcCheck, ButtonStyle.Normal);
+            btnSetup.Click += (s, e) => { settingsDlg.Close(); ShowSetup(); };
+            sd.Add(app, btnSetup, Theme.S(6), false);
+            btnCheckUpdates = new FlatButton("Check for updates  ·  you have " + Updater.Short(Updater.Current), Theme.IcRefresh, ButtonStyle.Normal);
+            btnCheckUpdates.Click += (s, e) => CheckForUpdates(true);
+            sd.Add(app, btnCheckUpdates, Theme.S(8), false);
 
             ToolTip tips = new ToolTip();
             tips.SetToolTip(tgNormalize, "Measures how loud each sound is and evens them out, so no clip is much louder than the rest.");
@@ -415,6 +438,27 @@ namespace SoundDeck
             slSound.ValueChanged += volChanged;
             slMic.ValueChanged += volChanged;
             slMonitor.ValueChanged += volChanged;
+        }
+
+        LinkLabel CreditLink()
+        {
+            LinkLabel l = new LinkLabel();
+            l.Text = "Virtual mic powered by VB-CABLE, donationware by VB-Audio · vb-cable.com";
+            l.LinkArea = new LinkArea(l.Text.IndexOf("vb-cable.com"), "vb-cable.com".Length);
+            l.Font = Theme.Small;
+            l.ForeColor = Theme.Faint;
+            l.LinkColor = Theme.Muted;
+            l.ActiveLinkColor = Theme.Accent;
+            l.Height = Theme.S(32);
+            l.LinkClicked += (s, e) => { try { Process.Start(CableInstaller.HomeUrl); } catch { } };
+            return l;
+        }
+
+        /// <summary>Opens Settings, on a given page (-1 = where it was left).</summary>
+        void ShowSettings(int page)
+        {
+            if (page >= 0) settingsDlg.ShowPage(page);
+            settingsDlg.ShowDialog(this);
         }
 
         void AddSide(Control c, int gapAbove)
@@ -702,7 +746,7 @@ namespace SoundDeck
             UpdateReplayButton();
             UpdateReplay();
             UpdateTray();
-            if (tgStartup.Checked) SetStartWithWindows(true); // keeps the path right if the exe was moved
+            if (tgStartup.Checked && !File.Exists(RegisteredStartupExe() ?? "")) SetStartWithWindows(true); // the exe was moved: follow it
             RefreshGrid();
             RegisterHotkeys();
             LayoutSidebar();
@@ -938,12 +982,17 @@ namespace SoundDeck
             else if (!installed)
                 cableCard.Set(Theme.Warn, Theme.IcWarning, "Virtual mic not installed", "Install it once so Discord, games and OBS can hear your sounds.");
             else if (!routed)
-                cableCard.Set(Theme.Warn, Theme.IcWarning, "Virtual mic is off", "Pick \"CABLE Input\" under Send sounds to.");
+                cableCard.Set(Theme.Warn, Theme.IcWarning, "Virtual mic is off", "Click here and pick \"CABLE Input\" under Send sounds to.");
             else
                 cableCard.Set(Theme.Good, Theme.IcCheck, "Virtual mic ready", "In Discord: Input Device \"CABLE Output\", Noise Suppression off.");
             btnInstall.Enabled = !installing;
             if ((installed && !installing) == !sideHidden.Contains(btnInstall))
+            {
+                // the install button and the VB-CABLE credit only take sidebar space while they're needed
+                // (the credit is always on Settings → Audio devices)
                 SetSideVisible(btnInstall, !installed || installing);
+                SetSideVisible(credit, !installed || installing);
+            }
         }
 
         void OpenAudio()
@@ -1103,6 +1152,7 @@ namespace SoundDeck
         void UpdatePttButton()
         {
             btnPtt.Text = "Push-to-talk key:  " + (pttKey == Keys.None ? "off" : PushToTalk.Describe(pttKey));
+            btnPtt.FitWidth();
         }
 
         void StopSound(SoundEntry s)
@@ -1530,6 +1580,7 @@ namespace SoundDeck
         void UpdateReplayButton()
         {
             btnReplayKey.Text = "Save-replay hotkey:  " + (replayKey == Keys.None ? "not set" : PadGrid.HotkeyText(replayKey));
+            btnReplayKey.FitWidth();
         }
 
         // ---- trim / play mode, relinking
@@ -1730,6 +1781,7 @@ namespace SoundDeck
         void UpdateStopKeyButton()
         {
             btnStopKey.Text = "Stop-all hotkey:  " + (stopKey == Keys.None ? "not set" : PadGrid.HotkeyText(stopKey));
+            btnStopKey.FitWidth();
         }
 
         void RegisterHotkeys()
@@ -2013,8 +2065,22 @@ namespace SoundDeck
                 return k != null && k.GetValue("SoundDeck") != null;
         }
 
+        /// <summary>The exe that Windows starts at login, or null.</summary>
+        static string RegisteredStartupExe()
+        {
+            using (Microsoft.Win32.RegistryKey k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(RunKey))
+            {
+                string v = k == null ? null : k.GetValue("SoundDeck") as string;
+                if (v == null) return null;
+                int a = v.IndexOf('"'), b = a >= 0 ? v.IndexOf('"', a + 1) : -1;
+                return a >= 0 && b > a ? v.Substring(a + 1, b - a - 1) : v;
+            }
+        }
+
         void SetStartWithWindows(bool on)
         {
+            // test copies (SOUNDDECK_DATA) must never change the real startup entry
+            if (Environment.GetEnvironmentVariable("SOUNDDECK_DATA") != null) return;
             try
             {
                 using (Microsoft.Win32.RegistryKey k = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(RunKey))
