@@ -1,5 +1,5 @@
 # Builds a release and packages it as dist\SoundDeck (folder) and dist\SoundDeck-<version>.zip.
-$version = "1.4.0"
+$version = "1.5.0"
 $dist = Join-Path $PSScriptRoot "dist"
 $folder = Join-Path $dist "SoundDeck"
 $zip = Join-Path $dist "SoundDeck-$version.zip"

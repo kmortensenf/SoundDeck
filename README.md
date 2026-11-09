@@ -46,6 +46,8 @@
 
 1. [Download the latest release](../../releases/latest), unzip it somewhere permanent (for example Documents), and run `SoundDeck.exe`.
    > Windows may say *"Windows protected your PC"* because the app isn't code-signed. If it does, click **More info → Run anyway**.
+
+   On first launch, a **setup guide** walks you through the steps below. It finishes with an automatic test: SoundDeck plays a chime into the virtual mic and listens on the other end, so you know Discord will hear your sounds. You can reopen the guide from the sidebar (**App → Setup guide**).
 2. In the sidebar, click **Install virtual mic**. You only need to do this once. Approve the Windows prompt, click **Install Driver**, and restart your PC if you're asked to.
 3. In Discord, go to **Settings → Voice & Video** and set **Input Device** to **CABLE Output (VB-Audio Virtual Cable)**.
 4. Keep **Mix my microphone in** turned on in SoundDeck, so people still hear you.

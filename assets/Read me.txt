@@ -1,4 +1,4 @@
-SoundDeck 1.4
+SoundDeck 1.5
 =============
 
 A soundboard for Windows 10 and 11. It plays sounds through your microphone into Discord, games and OBS, and you can trigger them with hotkeys.
@@ -12,6 +12,10 @@ GETTING STARTED
 
    If Windows says "Windows protected your PC", click "More info" and then "Run anyway".
    That warning appears because the app isn't code-signed. It's normal for small, free apps.
+
+   The first time you open it, a short setup guide walks you through everything below and
+   tests that your sounds really reach Discord. You can open it again from the sidebar
+   (App > Setup guide). The steps it covers:
 
 2. In the sidebar on the right, click "Install virtual mic". You only need to do this once.
    SoundDeck downloads VB-CABLE, a free virtual audio cable, from its official website.

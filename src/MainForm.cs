@@ -377,6 +377,9 @@ namespace SoundDeck
             btnExport = new FlatButton("Export board to share…", Theme.IcFolder, ButtonStyle.Normal);
             btnExport.Click += (s, e) => ExportBoard();
             AddSide(btnExport, Theme.S(8));
+            FlatButton btnSetup = new FlatButton("Setup guide", Theme.IcCheck, ButtonStyle.Normal);
+            btnSetup.Click += (s, e) => ShowSetup();
+            AddSide(btnSetup, Theme.S(8));
             btnCheckUpdates = new FlatButton("Version " + Updater.Short(Updater.Current) + "  ·  Check for updates", Theme.IcRefresh, ButtonStyle.Ghost);
             btnCheckUpdates.Click += (s, e) => CheckForUpdates(true);
             AddSide(btnCheckUpdates, Theme.S(6));
@@ -510,11 +513,11 @@ namespace SoundDeck
                 color = Theme.AccentHover;
                 text = grid.Selected.Count + " selected  ·  right-click for actions  ·  Delete removes  ·  Esc clears the selection";
             }
-            else if (playing.Count > 0)
+            else if (playing.Keys.OfType<SoundEntry>().Any()) // other things can play too, e.g. the setup guide's test chime
             {
                 glyph = Theme.IcPlay;
                 color = Theme.Accent;
-                text = "Now playing: " + string.Join(", ", playing.Keys.Cast<SoundEntry>().Select(x => x.Name));
+                text = "Now playing: " + string.Join(", ", playing.Keys.OfType<SoundEntry>().Select(x => x.Name));
             }
             else
             {
@@ -717,9 +720,53 @@ namespace SoundDeck
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
-            if (!startHidden) return;
-            if (tgTray.Checked) Hide();                      // started with Windows: live in the tray
-            else WindowState = FormWindowState.Minimized;
+            if (startHidden)
+            {
+                if (tgTray.Checked) Hide();                  // started with Windows: live in the tray
+                else WindowState = FormWindowState.Minimized;
+                return;
+            }
+            // first run (or the virtual mic still isn't installed): walk through setup
+            if (Get("setupDone", null) == null && (sounds.Count == 0 || !CableInstalled))
+                BeginInvoke(new Action(ShowSetup));
+        }
+
+        void ShowSetup()
+        {
+            string action;
+            using (SetupWizard w = new SetupWizard(this))
+            {
+                w.ShowDialog(this);
+                action = w.FinishAction;
+            }
+            settings["setupDone"] = "1";
+            SaveSettings();
+            if (action == "add") addMenu.Show(btnAdd, new Point(0, btnAdd.Height + Theme.S(4)));
+            else if (action == "record") OpenRecorder();
+        }
+
+        // ---- what the setup guide reads and changes
+
+        internal bool CableInstalled { get { return CableName(WinMM.OutputNames()) != null; } }
+        internal bool Installing { get { return installing; } }
+        internal string InstallStep { get { return installStep; } }
+        internal ComboBox MicCombo { get { return cbMic; } }
+        internal Toggle MicToggle { get { return tgMic; } }
+        internal Toggle DenoiseToggle { get { return tgDenoise; } }
+        internal Keys PushToTalkKey { get { return pttKey; } }
+        internal OutputDevice VirtualOutput { get { return virtualOut; } }
+        internal int SoundVolume { get { return slSound.Value; } }
+
+        /// <summary>Points "Send sounds to" at VB-CABLE (no-op if it already is).</summary>
+        internal void UseCable()
+        {
+            string cable = CableName(WinMM.OutputNames());
+            if (cable == null) return;
+            DeviceItem cur = cbVirtual.SelectedItem as DeviceItem;
+            if (cur != null && cur.Name == cable && virtualOut != null) return;
+            if (cur == null || cur.Name != cable) LoadDevices(); // the list may be from before the install
+            SelectByName(cbVirtual, cable);                      // fires OpenAudio + SaveSettings when it changes
+            if (virtualOut == null) OpenAudio();
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -1028,7 +1075,7 @@ namespace SoundDeck
             try { PushToTalk.Release(pttKey); } catch { }
         }
 
-        void SetPttKey()
+        internal void SetPttKey()
         {
             Keys k;
             UnregisterHotkeys();
@@ -1070,7 +1117,7 @@ namespace SoundDeck
             if (monitorOut != null) monitorOut.StopAll();
         }
 
-        void InstallCable()
+        internal void InstallCable()
         {
             if (installing) return;
             installing = true;
