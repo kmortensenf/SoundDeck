@@ -96,7 +96,7 @@ namespace SoundDeck
         FlatButton btnPtt, btnReplayKey, btnReplayNow, btnExport, btnCheckUpdates;
         StatusCard cableCard;
         DarkCombo cbVirtual, cbMic, cbMonitor;
-        Toggle tgMic, tgMonitor, tgStopPrev, tgNormalize, tgReplay, tgStartup, tgTray;
+        Toggle tgMic, tgDenoise, tgMonitor, tgStopPrev, tgNormalize, tgReplay, tgStartup, tgTray;
         FlatSlider slSound, slMic, slMonitor;
         LinkLabel credit;
         ContextMenuStrip padMenu, addMenu, bulkMenu;
@@ -328,6 +328,8 @@ namespace SoundDeck
             AddSide(tgMic, Theme.S(4));
             cbMic = new DarkCombo();
             AddSide(cbMic, Theme.S(4));
+            tgDenoise = new Toggle("Remove background noise");
+            AddSide(tgDenoise, Theme.S(4));
             slMic = new FlatSlider("Voice volume", Theme.IcMic);
             AddSide(slMic, Theme.S(6));
 
@@ -388,6 +390,13 @@ namespace SoundDeck
             tips.SetToolTip(tgReplay, "Keeps the last 30 seconds of what's playing on your PC in memory (never on disk), so you can save a funny moment after it happened.");
             tips.SetToolTip(tgTray, "Closing the window keeps SoundDeck running next to the clock, so hotkeys and your mic keep working.");
             tgNormalize.CheckedChanged += (s, e) => { if (!loading) SaveSettings(); };
+            tips.SetToolTip(tgDenoise, "Cleans up your microphone (fan, hum, background noise) before sounds are mixed in. " +
+                "Use this instead of Discord's Krisp noise suppression, which also removes your sound effects.");
+            tgDenoise.CheckedChanged += (s, e) =>
+            {
+                if (mic != null) mic.Suppressor = tgDenoise.Checked ? new NoiseSuppressor() : null;
+                if (!loading) SaveSettings();
+            };
             tgReplay.CheckedChanged += (s, e) => { if (!loading) { UpdateReplay(); SaveSettings(); } };
             tgStartup.CheckedChanged += (s, e) => { if (!loading) SetStartWithWindows(tgStartup.Checked); };
             tgTray.CheckedChanged += (s, e) => { if (!loading) { UpdateTray(); SaveSettings(); } };
@@ -674,6 +683,7 @@ namespace SoundDeck
             replayKey = (Keys)GetInt("replayHotkey", 0);
             pttKey = (Keys)GetInt("pushToTalkKey", 0);
             tgNormalize.Checked = GetInt("normalize", 1) == 1;
+            tgDenoise.Checked = GetInt("denoise", 1) == 1;
             tgReplay.Checked = GetInt("instantReplay", 0) == 1;
             tgTray.Checked = GetInt("tray", 0) == 1;
             tgStartup.Checked = StartsWithWindows();
@@ -883,7 +893,7 @@ namespace SoundDeck
             else if (!routed)
                 cableCard.Set(Theme.Warn, Theme.IcWarning, "Virtual mic is off", "Pick \"CABLE Input\" under Send sounds to.");
             else
-                cableCard.Set(Theme.Good, Theme.IcCheck, "Virtual mic ready", "In Discord, set Input Device to \"CABLE Output\".");
+                cableCard.Set(Theme.Good, Theme.IcCheck, "Virtual mic ready", "In Discord: Input Device \"CABLE Output\", Noise Suppression off.");
             btnInstall.Enabled = !installing;
             if ((installed && !installing) == !sideHidden.Contains(btnInstall))
                 SetSideVisible(btnInstall, !installed || installing);
@@ -904,7 +914,12 @@ namespace SoundDeck
             if (virtualOut != null && tgMic.Checked)
             {
                 DeviceItem m = cbMic.SelectedItem as DeviceItem;
-                try { mic = new MicCapture(m == null ? -1 : m.Id); virtualOut.Mic = mic; }
+                try
+                {
+                    mic = new MicCapture(m == null ? -1 : m.Id);
+                    if (tgDenoise.Checked) mic.Suppressor = new NoiseSuppressor();
+                    virtualOut.Mic = mic;
+                }
                 catch (Exception ex) { errors.Add("Microphone: " + ex.Message); }
             }
             if (tgMonitor.Checked)
@@ -914,7 +929,7 @@ namespace SoundDeck
                 catch (Exception ex) { errors.Add("Speakers: " + ex.Message); }
             }
             tgMic.Enabled = slSound.Enabled = hasVirtual;
-            cbMic.Enabled = slMic.Enabled = hasVirtual && tgMic.Checked;
+            cbMic.Enabled = slMic.Enabled = tgDenoise.Enabled = hasVirtual && tgMic.Checked;
             cbMonitor.Enabled = slMonitor.Enabled = tgMonitor.Checked;
             ApplyVolumes();
             UpdateCableCard();
@@ -1741,6 +1756,7 @@ namespace SoundDeck
             settings["replayHotkey"] = ((int)replayKey).ToString();
             settings["pushToTalkKey"] = ((int)pttKey).ToString();
             settings["normalize"] = tgNormalize.Checked ? "1" : "0";
+            settings["denoise"] = tgDenoise.Checked ? "1" : "0";
             settings["instantReplay"] = tgReplay.Checked ? "1" : "0";
             settings["tray"] = tgTray.Checked ? "1" : "0";
             settings["view"] = view;

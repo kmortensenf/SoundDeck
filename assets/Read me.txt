@@ -1,4 +1,4 @@
-SoundDeck 1.3
+SoundDeck 1.4
 =============
 
 A soundboard for Windows 10 and 11. It plays sounds through your microphone into Discord, games and OBS, and you can trigger them with hotkeys.
@@ -20,10 +20,13 @@ GETTING STARTED
 3. In Discord, go to Settings > Voice & Video and set Input Device to "CABLE Output".
    Keep "Mix my microphone in" turned on in SoundDeck, so people still hear your voice.
 
-4. For the best sound in Discord, also do this in Voice & Video:
-     - Noise Suppression: None
+4. Also in Voice & Video, turn these OFF:
+     - Noise Suppression: None   (Krisp removes sound effects and music along with noise)
      - Echo Cancellation: off
      - Automatic Gain Control: off
+   You don't lose noise removal: SoundDeck's "Remove background noise" (on by default)
+   cleans up your own microphone before the sounds are mixed in, so only your voice is
+   filtered, never the sounds.
 
 5. Do you use push-to-talk in Discord? In the sidebar, click "Push-to-talk key" and press the
    same key (or mouse button) you use in Discord. SoundDeck then holds it down while a sound

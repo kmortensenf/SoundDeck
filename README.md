@@ -19,6 +19,7 @@
 
 - **Plays into your mic.** People in voice chat hear your voice and your sounds together. SoundDeck mixes your real microphone in.
 - **One-click virtual mic setup.** SoundDeck downloads and installs the free [VB-CABLE](https://vb-cable.com) driver for you, after checking that it's signed by VB-Audio.
+- **Built-in noise removal for your mic.** It works as a replacement for Discord's Krisp, which also deletes your sound effects. It removes fan, hum and room noise from your voice before the sounds are mixed in, and fades out background noise between words.
 - **Push-to-talk support.** SoundDeck holds your Discord push-to-talk key (or Mouse 4/5) down while a sound plays.
 - **Global hotkeys.** Play any sound with a key, even while a game has focus. There's also a hotkey that stops everything.
 - **Even loudness.** Every sound is measured in LUFS, the measure streaming services use, and matched to the same level, so no clip blows out people's ears. Per-sound volume (0–200%) works on top.
@@ -50,7 +51,7 @@
 4. Keep **Mix my microphone in** turned on in SoundDeck, so people still hear you.
 5. If you use push-to-talk in Discord, click **Push-to-talk key** in the sidebar and press the same key.
 
-For the best sound in Discord, also set **Noise Suppression** to *None*, and turn off **Echo Cancellation** and **Automatic Gain Control**. Discord's voice filters treat music and sound effects as noise.
+In Discord, also set **Noise Suppression** to *None*, and turn off **Echo Cancellation** and **Automatic Gain Control**. Discord's voice filters, Krisp especially, treat music and sound effects as noise and strip them out. You don't lose noise removal by doing this: SoundDeck's **Remove background noise** (on by default) cleans up your own microphone *before* the sounds are mixed in, so your voice gets filtered and your sounds don't.
 
 ## Using it
 
@@ -88,7 +89,7 @@ Instant replay audio stays in memory and is never written to disk unless you sav
                        └──► your headphones (optional)
 ```
 
-Windows can't create a microphone without a signed audio driver, so SoundDeck uses VB-CABLE as its virtual mic. Sounds are decoded with Windows Media Foundation and resampled to 48 kHz with a windowed-sinc filter. They're mixed with your microphone, run through a soft limiter so overlapping sounds don't distort, and sent to the cable. Recording your PC's audio uses WASAPI loopback.
+Windows can't create a microphone without a signed audio driver, so SoundDeck uses VB-CABLE as its virtual mic. Your microphone is cleaned up first, with an STFT Wiener noise suppressor plus a gate between words. Sounds are decoded with Windows Media Foundation and resampled to 48 kHz with a windowed-sinc filter. They're mixed with your microphone, run through a soft limiter so overlapping sounds don't distort, and sent to the cable. Recording your PC's audio uses WASAPI loopback.
 
 ## Building from source
 

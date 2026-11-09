@@ -379,6 +379,9 @@ namespace SoundDeck
         /// <summary>Optional tap that receives every captured buffer (48 kHz stereo), e.g. for recording.</summary>
         public volatile Action<short[], int> OnData;
 
+        /// <summary>Optional background-noise removal, applied before the voice is mixed with sounds.</summary>
+        public volatile NoiseSuppressor Suppressor;
+
         public MicCapture(int deviceId)
         {
             WAVEFORMATEX f = WinMM.Format();
@@ -414,6 +417,8 @@ namespace SoundDeck
                 {
                     int samples = Math.Min(tmp.Length, WinMM.BytesRecorded(hdrs[next]) / 2);
                     Marshal.Copy(datas[next], tmp, 0, samples);
+                    NoiseSuppressor ns = Suppressor;
+                    if (ns != null) ns.Process(tmp, samples);
                     Write(tmp, samples);
                     Action<short[], int> tap = OnData;
                     if (tap != null) tap(tmp, samples);
