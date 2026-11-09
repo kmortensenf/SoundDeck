@@ -1,0 +1,5 @@
+# Build output (releases are published on GitHub, not committed)
+/SoundDeck.exe
+/dist/
+*.zip
+*.pdb

@@ -1,0 +1,83 @@
+SoundDeck 1.2
+=============
+
+A soundboard for Windows 10 and 11. It plays sounds through your microphone into Discord, games and OBS, and you can trigger them with hotkeys.
+
+
+GETTING STARTED
+---------------
+
+1. Put this folder somewhere permanent, for example in Documents, then double-click SoundDeck.exe.
+   No installation is needed.
+
+   If Windows says "Windows protected your PC", click "More info" and then "Run anyway".
+   That warning appears because the app isn't code-signed. It's normal for small, free apps.
+
+2. In the sidebar on the right, click "Install virtual mic". You only need to do this once.
+   SoundDeck downloads VB-CABLE, a free virtual audio cable, from its official website.
+   Approve the Windows prompt and click "Install Driver". Restart your PC if it asks you to.
+
+3. In Discord, go to Settings > Voice & Video and set Input Device to "CABLE Output".
+   Keep "Mix my microphone in" turned on in SoundDeck, so people still hear your voice.
+
+4. For the best sound in Discord, also do this in Voice & Video:
+     - Noise Suppression: None
+     - Echo Cancellation: off
+     - Automatic Gain Control: off
+
+
+USING IT
+--------
+
+  Add sounds      Click "Add sounds", or drag audio files or folders onto the window.
+                  Supported formats: MP3, WAV, M4A, AAC, WMA and FLAC.
+  Play / stop     Click a pad to play it. Click it again to stop it.
+  Hotkeys         Right-click a pad and choose "Set hotkey". Hotkeys work in games too.
+  Stop everything Click "Stop all", press Esc, or set a stop-all hotkey in the sidebar.
+  Search          Press Ctrl+F, then press Enter to play the first match.
+                  Search looks through all categories.
+
+
+RECORDING SOUNDS
+----------------
+
+Click "Record" at the top, or press Ctrl+R. You can record from:
+
+  Microphone      Uses the microphone that's selected in the sidebar.
+  Computer audio  Records everything playing on your PC, such as a YouTube clip or a
+                  game sound. Start recording, play the clip, then stop.
+
+Press the red button or Space to start and stop. Silence at the start and the end is
+cut off automatically. Drag the purple handles to trim more, and press Preview (or Space)
+to listen. Only you hear the preview. Give the sound a name, pick a category, and
+click "Save to board". Recordings are saved as .wav files in Documents\SoundDeck Recordings.
+A recording can be up to 5 minutes long.
+
+
+ORGANIZING MANY SOUNDS
+----------------------
+
+  Reorder         Drag a pad to a new spot.
+  Categories      Click "+ New category" above the pads. To move a sound into a category,
+                  drag it onto the category's tab, or right-click it > Move to category.
+                  Right-click a tab to rename it, move it, sort its sounds A-Z or delete it.
+                  Deleting a category keeps its sounds; they stay under All.
+  Folders         Adding a whole folder from the All tab turns it into a category with
+                  the folder's name. Sounds you add while a category is open go into it.
+  Favorites       Click the star on a pad. Your favorites get their own tab.
+  Switch tabs     Ctrl+1 to Ctrl+9.
+  Volume          Right-click a pad > Volume to make one sound louder or quieter (0-200%).
+  Compact view    The button to the right of the tabs fits many more sounds on screen.
+
+SoundDeck must be running for your voice to reach Discord while Discord's input is set to
+CABLE Output. When you're done, close SoundDeck and switch Discord back to your normal mic.
+
+Your sounds and settings are saved in %APPDATA%\SoundDeck.
+The sound files themselves stay where they are, so don't delete or move them.
+
+
+CREDITS
+-------
+
+The virtual microphone is VB-CABLE by VB-Audio Software (https://vb-cable.com).
+VB-CABLE is donationware: if you find it useful, please consider supporting its author.
